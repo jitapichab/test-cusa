@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: monitoring
+data:
+  datasource.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus.orbitpay.svc.cluster.local:9090
+        isDefault: true
+        access: proxy
+        editable: false

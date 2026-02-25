@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alertmanager-network-policy
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/part-of: orbitpay
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from Prometheus
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 9093
+          protocol: TCP
+  egress:
+    # DNS resolution only
+    # In production: add PagerDuty/Slack webhook egress rules
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

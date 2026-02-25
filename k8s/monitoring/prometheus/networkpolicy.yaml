@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-network-policy
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: orbitpay
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from Grafana for queries
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: grafana
+      ports:
+        - port: 9090
+          protocol: TCP
+  egress:
+    # Allow scraping payment-gateway-connector
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: payment-gateway-connector
+      ports:
+        - port: 8000
+          protocol: TCP
+    # Allow scraping vaultgateway-mock
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vaultgateway-mock
+      ports:
+        - port: 8080
+          protocol: TCP
+    # Allow sending alerts to alertmanager
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: alertmanager
+      ports:
+        - port: 9093
+          protocol: TCP
+    # DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: monitoring
+data:
+  orbitpay-alerts.yml: |
+    groups:
+      - name: orbitpay-credential-alerts
+        rules:
+          - alert: CredentialExpiringSoon
+            expr: credential_age_seconds > 259200
+            for: 5m
+            labels:
+              severity: warning
+              team: payments
+            annotations:
+              summary: "Payment gateway credential expiring soon"
+              description: "Credential age is {{ $value | humanizeDuration }}, exceeding 72h threshold. Rotation recommended."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/credential-rotation"
+
+          - alert: CredentialExpired
+            expr: credential_status == 0
+            for: 1m
+            labels:
+              severity: critical
+              team: payments
+            annotations:
+              summary: "Payment gateway credential has expired"
+              description: "Credential status indicates expired. Immediate rotation required."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/credential-expired"
+
+          - alert: GatewayAuthFailureRate
+            expr: rate(gateway_auth_failures_total[5m]) > 0.1
+            for: 2m
+            labels:
+              severity: critical
+              team: payments
+            annotations:
+              summary: "High gateway authentication failure rate"
+              description: "Authentication failure rate is {{ $value }}/s, exceeding 0.1/s threshold."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/gateway-auth-failures"
+
+          - alert: VaultUnreachable
+            expr: vault_connected == 0
+            for: 2m
+            labels:
+              severity: critical
+              team: platform
+            annotations:
+              summary: "Vault is unreachable from payment-gateway-connector"
+              description: "Vault connectivity has been down for more than 2 minutes."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/vault-connectivity"
+
+          - alert: CircuitBreakerOpen
+            expr: circuit_breaker_state == 2
+            for: 1m
+            labels:
+              severity: warning
+              team: payments
+            annotations:
+              summary: "Circuit breaker is open"
+              description: "Circuit breaker for gateway communication is in open state. Requests are being short-circuited."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/circuit-breaker"
+
+          - alert: HighGatewayErrorRate
+            expr: rate(gateway_requests_total{status="error"}[5m]) / rate(gateway_requests_total[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: warning
+              team: payments
+            annotations:
+              summary: "High gateway error rate"
+              description: "Gateway error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/gateway-errors"
+
+          - alert: CredentialRotationFailed
+            expr: increase(credential_fetch_errors_total[10m]) > 3
+            for: 1m
+            labels:
+              severity: critical
+              team: payments
+            annotations:
+              summary: "Credential rotation failures detected"
+              description: "More than 3 credential fetch errors in the last 10 minutes. Rotation may be failing."
+              runbook_url: "https://wiki.orbitpay.internal/runbooks/credential-rotation-failed"
