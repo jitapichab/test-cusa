@@ -1,0 +1,63 @@
+# Exercise
+exercise.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Secrets - NEVER commit
+*.pem
+*.key
+*.crt
+*.env
+.env.*
+secrets/
+vault-token
+*.secret
+
+# Terraform/IaC state
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Logs
+*.log
+
+# Claude
+.claude/
+CLAUDE.md.template
+PROMPT.md
