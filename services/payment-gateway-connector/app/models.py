@@ -9,14 +9,18 @@ from pydantic import BaseModel, Field
 class PaymentRequest(BaseModel):
     """Incoming payment authorization request."""
 
-    merchant_id: str = Field(..., min_length=1, description="Merchant identifier")
-    amount: float = Field(..., gt=0, description="Transaction amount")
+    merchant_id: str = Field(
+        ..., min_length=1, max_length=64, description="Merchant identifier"
+    )
+    amount: float = Field(..., gt=0, le=1_000_000, description="Transaction amount")
     currency: str = Field(
         ..., min_length=3, max_length=3, description="ISO 4217 currency code"
     )
-    card_token: str = Field(..., min_length=1, description="Tokenized card reference")
+    card_token: str = Field(
+        ..., min_length=1, max_length=128, description="Tokenized card reference"
+    )
     idempotency_key: str = Field(
-        ..., min_length=1, description="Unique key for idempotent processing"
+        ..., min_length=1, max_length=128, description="Unique key for idempotent processing"
     )
 
 

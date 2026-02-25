@@ -276,16 +276,46 @@ class CredentialManager:
             self._refresh_task = None
 
     async def _refresh_loop(self) -> None:
-        """Periodically refresh credentials from Vault."""
+        """Periodically refresh credentials from Vault.
+
+        Uses supervised restart with exponential backoff on consecutive errors
+        to avoid hammering a failing Vault instance.
+        """
+        consecutive_errors = 0
+        max_backoff = 300  # 5 minutes cap
+
         while self._running:
             try:
-                await asyncio.sleep(self._check_interval)
+                if consecutive_errors > 0:
+                    backoff = min(
+                        self._check_interval * (2 ** consecutive_errors),
+                        max_backoff,
+                    )
+                    logger.warning(
+                        "credential_refresh_backoff",
+                        consecutive_errors=consecutive_errors,
+                        backoff_seconds=backoff,
+                    )
+                    await asyncio.sleep(backoff)
+                else:
+                    await asyncio.sleep(self._check_interval)
+
                 if not self._running:
                     break
+
                 logger.debug("credential_refresh_tick")
-                self.load_credentials()
+                success = self.load_credentials()
+                if success:
+                    consecutive_errors = 0
+                else:
+                    consecutive_errors += 1
             except asyncio.CancelledError:
                 break
             except Exception as exc:
-                logger.error("credential_refresh_error", error=str(exc))
+                consecutive_errors += 1
+                logger.error(
+                    "credential_refresh_error",
+                    error=str(exc),
+                    consecutive_errors=consecutive_errors,
+                )
                 self.credential_fetch_errors_total.inc()
