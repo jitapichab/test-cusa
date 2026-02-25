@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-config
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: secrets-management
+data:
+  payment-gateway-policy.hcl: |
+    # Policy for payment-gateway-connector: read-only access to gateway credentials
+    path "secret/data/orbitpay/vaultgateway" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/orbitpay/vaultgateway" {
+      capabilities = ["read", "list"]
+    }
+  vault-init.sh: |
+    #!/usr/bin/env sh
+    set -e
+
+    echo "[vault-init] Waiting for Vault to be ready..."
+    until vault status > /dev/null 2>&1; do
+      echo "[vault-init] Vault not ready, retrying in 2s..."
+      sleep 2
+    done
+    echo "[vault-init] Vault is ready."
+
+    # Enable KV v2 secrets engine (idempotent — will skip if already enabled)
+    echo "[vault-init] Enabling KV v2 secrets engine at secret/..."
+    vault secrets enable -version=2 -path=secret kv 2>/dev/null || \
+      echo "[vault-init] KV v2 engine already enabled at secret/"
+
+    # Write the payment-gateway-connector policy
+    echo "[vault-init] Writing payment-gateway-connector policy..."
+    vault policy write payment-gateway-connector /vault/config/payment-gateway-policy.hcl
+
+    # Create initial VaultGateway credentials
+    echo "[vault-init] Writing initial VaultGateway credentials..."
+    vault kv put secret/orbitpay/vaultgateway \
+      api_key="ogw-init-key-$(date +%s)" \
+      api_secret="ogw-init-secret-$(date +%s)" \
+      merchant_id="orbitpay-merchant-001" \
+      gateway_url="http://vaultgateway-mock.orbitpay.svc.cluster.local:8080" \
+      created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      version="1"
+
+    # Create a token with the payment-gateway-connector policy (for dev mode)
+    echo "[vault-init] Creating token for payment-gateway-connector..."
+    vault token create \
+      -policy=payment-gateway-connector \
+      -display-name="payment-gateway-connector" \
+      -ttl=720h \
+      -format=json | tee /tmp/pgc-token.json
+
+    echo "[vault-init] Vault initialization complete."
+    echo "[vault-init] Payment gateway connector token:"
+    cat /tmp/pgc-token.json | grep -o '"client_token":"[^"]*"' || true
+
+    # Enable audit log to stdout (for dev observability)
+    echo "[vault-init] Enabling file audit log..."
+    vault audit enable file file_path=stdout 2>/dev/null || \
+      echo "[vault-init] Audit log already enabled."
+
+    echo "[vault-init] All configuration complete."
