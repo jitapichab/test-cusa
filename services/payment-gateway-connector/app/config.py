@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     service_port: int = 8000
     log_level: str = "INFO"
 
-    api_keys: list[str] = ["default-api-key"]
+    api_keys: list[str] = []
 
     model_config = {
         "env_prefix": "",

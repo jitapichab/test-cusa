@@ -146,7 +146,7 @@ def _validate_api_key(api_key: str | None, request_id: str) -> None:
         )
         raise HTTPException(status_code=401, detail="Missing API key")
 
-    if api_key not in settings.api_keys:
+    if not settings.api_keys or api_key not in settings.api_keys:
         audit_auth_failure(
             resource="/api/v1/authorize",
             reason="invalid_api_key",

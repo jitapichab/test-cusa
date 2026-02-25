@@ -50,11 +50,11 @@ spec:
                 secretKeyRef:
                   name: payment-gateway-connector-secret
                   key: VAULT_TOKEN
-            - name: API_KEY_HASH
+            - name: API_KEYS
               valueFrom:
                 secretKeyRef:
                   name: payment-gateway-connector-secret
-                  key: API_KEY_HASH
+                  key: API_KEYS
           resources:
             requests:
               memory: "128Mi"

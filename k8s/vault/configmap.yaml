@@ -46,21 +46,21 @@ data:
       created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       version="1"
 
-    # Create a token with the payment-gateway-connector policy (for dev mode)
-    echo "[vault-init] Creating token for payment-gateway-connector..."
+    # Create a scoped token with the payment-gateway-connector policy (dev mode)
+    echo "[vault-init] Creating scoped token for payment-gateway-connector..."
     vault token create \
       -policy=payment-gateway-connector \
       -display-name="payment-gateway-connector" \
       -ttl=720h \
-      -format=json | tee /tmp/pgc-token.json
+      -format=json > /tmp/pgc-token.json
 
     echo "[vault-init] Vault initialization complete."
-    echo "[vault-init] Payment gateway connector token:"
-    cat /tmp/pgc-token.json | grep -o '"client_token":"[^"]*"' || true
+    # NOTE: Token is written to /tmp/pgc-token.json but NOT printed to stdout
+    # to avoid credential exposure in pod logs (A09: Logging Failures)
 
-    # Enable audit log to stdout (for dev observability)
-    echo "[vault-init] Enabling file audit log..."
-    vault audit enable file file_path=stdout 2>/dev/null || \
+    # Enable audit log to file (for dev observability)
+    echo "[vault-init] Enabling audit log..."
+    vault audit enable file file_path=/vault/data/audit.log 2>/dev/null || \
       echo "[vault-init] Audit log already enabled."
 
     echo "[vault-init] All configuration complete."

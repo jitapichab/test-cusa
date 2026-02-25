@@ -146,7 +146,8 @@ rotate_credentials() {
     local current_api_key
     current_api_key=$(echo "${current_creds}" | grep -o '"api_key":"[^"]*"' | cut -d'"' -f4)
     log_info "Current credential version: ${current_version}"
-    log_info "Current API key: ${current_api_key:0:20}..."
+    # Only log key prefix length sufficient for debugging, not for reuse
+    log_info "Current API key prefix: ${current_api_key:0:8}***"
 
     # Step 2: Generate new API key
     log_info "Step 2: Generating new API key..."
@@ -155,7 +156,7 @@ rotate_credentials() {
     local new_api_secret
     new_api_secret="ogw-secret-$(date +%s)-$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 16)"
     local new_version=$((current_version + 1))
-    log_info "New API key: ${new_api_key:0:20}..."
+    log_info "New API key prefix: ${new_api_key:0:8}***"
     log_info "New version: ${new_version}"
 
     # Step 3: Update VaultGateway mock to accept BOTH old and new keys
@@ -256,8 +257,8 @@ rotate_credentials() {
     echo -e "  Completed:        ${rotation_end}"
     echo -e "  Previous version: ${current_version}"
     echo -e "  New version:      ${new_version}"
-    echo -e "  Old API key:      ${current_api_key:0:20}..."
-    echo -e "  New API key:      ${new_api_key:0:20}..."
+    echo -e "  Old API key:      ${current_api_key:0:8}***"
+    echo -e "  New API key:      ${new_api_key:0:8}***"
     echo -e "  Zero-downtime:    YES (dual-key overlap during rotation)"
     echo ""
     echo -e "${GREEN}================================================================${NC}"

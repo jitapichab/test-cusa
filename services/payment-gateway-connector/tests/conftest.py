@@ -110,6 +110,10 @@ def test_app(
     main_module._start_time = 1000000.0
     main_module._idempotency_cache = OrderedDict()
 
+    # Set test API keys (config defaults to [] for fail-closed security)
+    original_api_keys = settings.api_keys
+    settings.api_keys = ["default-api-key"]
+
     with TestClient(main_module.app, raise_server_exceptions=False) as client:
         yield client
 
@@ -119,3 +123,4 @@ def test_app(
     main_module._metrics_registry = original_registry
     main_module._idempotency_cache = original_cache
     main_module._start_time = original_start
+    settings.api_keys = original_api_keys

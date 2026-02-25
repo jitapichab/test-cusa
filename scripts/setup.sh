@@ -223,11 +223,12 @@ apply_manifests() {
 
     # 9. Wait for all deployments
     log_info "Waiting for all deployments to be ready..."
-    wait_for_rollout "deployment/vaultgateway-mock" "orbitpay" "120s" || true
-    wait_for_rollout "deployment/payment-gateway-connector" "orbitpay" "120s" || true
-    wait_for_rollout "deployment/prometheus" "orbitpay" "120s" || true
-    wait_for_rollout "deployment/grafana" "orbitpay" "120s" || true
-    wait_for_rollout "deployment/alertmanager" "orbitpay" "120s" || true
+    # Wait for each deployment — fail loudly if any deployment fails to roll out
+    wait_for_rollout "deployment/vaultgateway-mock" "orbitpay" "180s"
+    wait_for_rollout "deployment/payment-gateway-connector" "orbitpay" "180s"
+    wait_for_rollout "deployment/prometheus" "orbitpay" "180s"
+    wait_for_rollout "deployment/grafana" "orbitpay" "180s"
+    wait_for_rollout "deployment/alertmanager" "orbitpay" "180s"
 
     log_success "All deployments are ready."
 }
