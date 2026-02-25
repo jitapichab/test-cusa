@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-gateway-connector-config
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: payment-gateway-connector
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: payment-processing
+data:
+  VAULT_ADDR: "http://vault.orbitpay.svc.cluster.local:8200"
+  VAULT_SECRET_PATH: "secret/data/orbitpay/vaultgateway"
+  VAULT_AUTH_METHOD: "token"
+  VAULTGATEWAY_URL: "http://vaultgateway-mock.orbitpay.svc.cluster.local:8080"
+  CREDENTIAL_CHECK_INTERVAL: "30"
+  LOG_LEVEL: "INFO"
+  GRACEFUL_SHUTDOWN_TIMEOUT: "30"

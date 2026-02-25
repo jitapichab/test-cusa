@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultgateway-mock
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: vaultgateway-mock
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: mock-gateway
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: vaultgateway-mock
+    app.kubernetes.io/part-of: orbitpay
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-gateway-connector-network-policy
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: payment-gateway-connector
+    app.kubernetes.io/part-of: orbitpay
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: payment-gateway-connector
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from prometheus for metrics scraping
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8000
+          protocol: TCP
+    # Allow traffic from API gateway
+    - from:
+        - podSelector:
+            matchLabels:
+              role: api-gateway
+      ports:
+        - port: 8000
+          protocol: TCP
+  egress:
+    # Allow traffic to Vault
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+      ports:
+        - port: 8200
+          protocol: TCP
+    # Allow traffic to VaultGateway mock
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vaultgateway-mock
+      ports:
+        - port: 8080
+          protocol: TCP
+    # DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

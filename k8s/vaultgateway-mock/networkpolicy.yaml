@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vaultgateway-mock-network-policy
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: vaultgateway-mock
+    app.kubernetes.io/part-of: orbitpay
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vaultgateway-mock
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic only from payment-gateway-connector
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: payment-gateway-connector
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    # DNS resolution only
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

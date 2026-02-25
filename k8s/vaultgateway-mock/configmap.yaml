@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultgateway-mock-config
+  namespace: orbitpay
+  labels:
+    app.kubernetes.io/name: vaultgateway-mock
+    app.kubernetes.io/part-of: orbitpay
+    app.kubernetes.io/component: mock-gateway
+data:
+  SERVER_PORT: "8080"
+  LOG_LEVEL: "INFO"
+  RESPONSE_DELAY_MS: "50"
+  ENVIRONMENT: "development"
